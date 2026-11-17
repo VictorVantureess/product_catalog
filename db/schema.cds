@@ -253,3 +253,108 @@ entity OrderItems : cuid {
   Product  : Association to Products;
   Quantity : Integer;
 }
+
+context materials {
+  entity Products : cuid, managed {
+    Name             : localized String;
+    Description      : localized String;
+    ImageUrl         : String;
+    ReleaseDate      : DateTime;
+    DiscontinuedDate : DateTime;
+    Price            : Decimal(16, 2);
+    Supplier         : Association to sales.Suppliers;
+    Category         : Association to Categories;
+    Currency         : Association to Currencies;
+    DimensionUnit    : Association to DimensionUnits;
+    UnitOfMeasure    : Association to UnitOfMeasures;
+    SalesData        : Association to many sales.SalesData on SalesData.Product = $self;
+    Reviews          : Association to many ProductReview on Reviews.Product = $self;
+  }
+
+  entity Categories {
+    key ID : String(1);
+    Name   : localized String;
+  }
+
+  entity StockAvailability {
+    key ID      : Integer;
+    Description : localized String;
+  }
+
+  entity Currencies {
+    key ID      : String(3);
+    Description : localized String;
+  }
+
+  entity UnitOfMeasures {
+    key ID      : String(2);
+    Description : localized String;
+  }
+
+  entity DimensionUnits {
+    key ID      : String(2);
+    Description : localized String;
+  }
+
+  entity ProductReview : cuid, managed {
+    Name    : String;
+    Rating  : Integer;
+    Comment : String;
+    Product : Association to Products;
+  }
+
+  entity SelProducts as projection on Products;
+  entity ProjProducts as projection on Products excluding { CreatedAt, CreatedBy, ModifiedAt, ModifiedBy };
+  entity ProjProducts2 as projection on Products { *, Category.Name as CategoryName };
+  entity ProjProducts3 as projection on Products { Name, Description, Price };
+}
+
+// Extensión para Products dentro del contexto materials
+extend materials.Products with {
+  PriceCondition : String;
+  PriceDetermination : String;
+}
+
+context sales {
+  entity Orders : cuid {
+    OrderNo : String;
+    Items   : Composition of many OrderItems on Items.Order = $self;
+  }
+
+  entity OrderItems : cuid {
+    Order    : Association to Orders;
+    Product  : Association to materials.Products;
+    Quantity : Integer;
+  }
+
+  entity Suppliers : cuid, managed {
+    Name       : String;
+    Street     : String;
+    City       : String;
+    State      : String(2);
+    PostalCode : String(5);
+    Country    : String(3);
+    Email      : String;
+    Phone      : String;
+    Fax        : String;
+    Product    : Association to many materials.Products on Product.Supplier = $self;
+  }
+
+  entity Months {
+    key ID           : String(2);
+    Description      : localized String;
+    ShortDescription : localized String(3);
+  }
+
+  entity SelProducts1 as projection on materials.Products;
+  entity SelProducts2 as projection on materials.Products where Price > 1000;
+  entity SelProducts3 as projection on materials.Products order by Price desc;
+
+  entity SalesData : cuid, managed {
+    DeliveryDate  : DateTime;
+    Revenue       : Decimal(16, 2);
+    Product       : Association to materials.Products;
+    Currency      : Association to materials.Currencies;
+    DeliveryMonth : Association to Months;
+  }
+}
