@@ -172,3 +172,88 @@ extend entity Products with {
   PriceCondition     : String(2);
   PriceDetermination : String(3);
 };
+
+//namespace com.logali;
+
+// 1. Asociaciones no administradas en Products
+// 1. Asociaciones no administradas en Products
+extend entity Products with {
+  supplier_ID      : UUID;
+  unitOfMeasure_ID : String;
+  dimensionUnit_ID : String;
+
+  ToSupplier       : association to Suppliers on ToSupplier.ID = supplier_ID;
+  ToUnitOfMeasure  : association to UnitOfMeasures on ToUnitOfMeasure.ID = unitOfMeasure_ID;
+  ToDimesionUnit   : association to DimensionUnits on ToDimesionUnit.ID = dimensionUnit_ID;
+};
+
+// 2. Modificación de ProductReview con ID tipo UUID y asociación administrada
+/*
+entity ProductReview {
+  key ID      : UUID;
+  Rating      : Integer;
+  Comment     : String;
+  Product     : Association to Products;
+}
+*/
+
+// Asociaciones administradas en las entidades correspondientes
+extend entity Products with {
+  Supplier    : Association to Suppliers;
+  Category    : Association to Categories;
+  Currency    : Association to Currencies;
+  DimensionUnit : Association to DimensionUnits;
+  UnitOfMeasure : Association to UnitOfMeasures;
+}
+
+extend entity SalesData with {
+  Product     : Association to Products;
+  Currency    : Association to Currencies;
+  DeliveryMonth : Association to Months;
+}
+
+// 3. Asociaciones de uno a muchos (reversas)
+extend entity Products {
+  SalesData   : association to many SalesData on SalesData.Product = $self;
+}
+
+extend entity ProductReview {
+  // Ya vinculada mediante su asociación a Product
+}
+
+extend entity Suppliers {
+  Product     : association to many Products on Product.Supplier = $self;
+}
+
+// 4. Entidades Course, Student y StudentCourse (Muchos a Muchos)
+entity Course {
+  key ID      : UUID;
+  Title       : String;
+  Students    : Association to many StudentCourse on Students.Course = $self;
+}
+
+entity Student {
+  key ID      : UUID;
+  Name        : String;
+  Courses     : Association to many StudentCourse on Courses.Student = $self;
+}
+
+entity StudentCourse {
+  key ID      : UUID;
+  Student     : Association to Student;
+  Course      : Association to Course;
+}
+
+// 5. Composiciones (Orders y OrderItems)
+entity Orders {
+  key ID      : UUID;
+  OrderNo     : String;
+  Items       : Composition of many OrderItems on Items.Order = $self;
+}
+
+entity OrderItems {
+  key ID      : UUID;
+  Order       : Association to Orders;
+  Product     : Association to Products;
+  Quantity    : Integer;
+}
