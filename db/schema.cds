@@ -121,3 +121,54 @@ entity Car {
   virtual discount_1 : Decimal;
   virtual discount_2 : Decimal;
 }
+
+// --- 1. Selecciones (select) sobre Products ---
+entity SelProducts as select from Products;
+
+entity SelProducts1 as select * from Products;
+
+entity SelProducts2 as select from Products {
+  Name,
+  Price,
+  Quantity
+};
+
+entity SelProducts3 as select from Products 
+  left join ProductReview on Products.Name = ProductReview.Name 
+{
+  sum(Products.Price) as TotalPrice,
+  ProductReview.Rating,
+  Products.Name
+} 
+group by ProductReview.Rating, Products.Name
+order by ProductReview.Rating desc;
+
+
+// --- 2. Proyecciones (projection on) sobre Products ---
+entity ProjProducts as projection on Products;
+
+entity ProjProducts2 as projection on Products;
+
+entity ProjProducts3 as projection on Products {
+  ReleaseDate,
+  Name
+};
+
+
+// --- 3. Entidades con parámetros (Comentadas por limitación de SQLite local) ---
+/*
+entity ParamProducts as select from Products {
+  Name,
+  Price,
+  Quantity
+} where Name = :pName;
+
+entity ProjParamProducts as projection on Products parameters pName : String;
+*/
+
+
+// --- 4. Extensión de la entidad Products ---
+extend entity Products with {
+  PriceCondition     : String(2);
+  PriceDetermination : String(3);
+};
