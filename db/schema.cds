@@ -1,5 +1,7 @@
 namespace com.logali;
 
+using { cuid, managed } from '@sap/cds/common';
+
 type Name : String(50);
 
 type Address {
@@ -34,7 +36,7 @@ type Gender : String enum {
   female;
 }
 
-entity Products {
+entity Products: cuid, managed {
   key ID                : UUID;
   Name                  : Name not null; 
   Description           : String;
@@ -48,59 +50,60 @@ entity Products {
   Quantity              : Decimal(16,2);
 }
 
-entity Suppliers {
+entity Suppliers : cuid, managed {
   key ID      : UUID;
   Name        : Products:Name;
   address     : Address; 
   Email       : String;
   Phone       : String;
   Fax         : String;
+  Product : Association to many Products on Product.Supplier = $self;
 }
 
-entity Categories {
+entity Categories : cuid, managed {
   key ID   : String(1);
   Name     : String;
 }
 
-entity StockAvailability {
+entity StockAvailability : cuid, managed {
   key ID      : Integer;
   Description : String;
 }
 
-entity Currencies {
+entity Currencies : cuid, managed {
   key ID      : String(3);
   Description : String;
 }
 
-entity UnitOfMeasures {
+entity UnitOfMeasures : cuid, managed {
   key ID      : String(2);
   Description : String;
 }
 
-entity DimensionUnits {
+entity DimensionUnits : cuid, managed {
   key ID      : String(2);
   Description : String;
 }
 
-entity Months {
+entity Months : cuid, managed {
   key ID             : String(2);
   Description        : String;
   ShortDescription   : String(3);
 }
 
-entity ProductReview {
+entity ProductReview : cuid, managed {
   key Name  : String;
   Rating    : Integer;
   Comment   : String;
 }
 
-entity SalesData {
+entity SalesData : cuid, managed {
   key ID        : UUID;
   DeliveryDate  : DateTime;
   Revenue       : Decimal(16,2);
 }
 
-entity Order {
+entity Order : cuid, managed {
   clientGender : Gender;
   status       : Integer enum {
     submitted = 1;
@@ -115,7 +118,7 @@ entity Order {
   };
 }
 
-entity Car {
+entity Car : cuid, managed {
   key ID         : UUID;
   name           : String;
   virtual discount_1 : Decimal;
@@ -188,14 +191,12 @@ extend entity Products with {
 };
 
 // 2. Modificación de ProductReview con ID tipo UUID y asociación administrada
-/*
-entity ProductReview {
+
+extend entity ProductReview {
   key ID      : UUID;
-  Rating      : Integer;
-  Comment     : String;
   Product     : Association to Products;
 }
-*/
+
 
 // Asociaciones administradas en las entidades correspondientes
 extend entity Products with {
@@ -204,6 +205,7 @@ extend entity Products with {
   Currency    : Association to Currencies;
   DimensionUnit : Association to DimensionUnits;
   UnitOfMeasure : Association to UnitOfMeasures;
+  Reviews          : Association to many ProductReview on Reviews.Product = $self;
 }
 
 extend entity SalesData with {
@@ -219,10 +221,6 @@ extend entity Products {
 
 extend entity ProductReview {
   // Ya vinculada mediante su asociación a Product
-}
-
-extend entity Suppliers {
-  Product     : association to many Products on Product.Supplier = $self;
 }
 
 // 4. Entidades Course, Student y StudentCourse (Muchos a Muchos)
@@ -245,15 +243,13 @@ entity StudentCourse {
 }
 
 // 5. Composiciones (Orders y OrderItems)
-entity Orders {
-  key ID      : UUID;
-  OrderNo     : String;
-  Items       : Composition of many OrderItems on Items.Order = $self;
+entity Orders : cuid {
+  OrderNo : String;
+  Items   : Composition of many OrderItems on Items.Order = $self;
 }
 
-entity OrderItems {
-  key ID      : UUID;
-  Order       : Association to Orders;
-  Product     : Association to Products;
-  Quantity    : Integer;
+entity OrderItems : cuid {
+  Order    : Association to Orders;
+  Product  : Association to Products;
+  Quantity : Integer;
 }
